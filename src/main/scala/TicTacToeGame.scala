@@ -1,3 +1,5 @@
+import TicTacToeGame.Players.Player
+
 import scala.io.StdIn
 
 /**
@@ -7,11 +9,14 @@ import scala.io.StdIn
 object TicTacToeGame {
 
   //row;col
-  private var board : Array[Array[Player.Value]] = _
-  private var nextPlayer: Player.Value = _
+  private var board : Array[Array[Player]] = _
+  private var nextPlayer: Player = _
+
+  var arr = new Array[Int](10)
 
   def main(args: Array[String]): Unit = {
     initGame()
+    println(arr(5))
     while(true){
       turnPlayer()
 
@@ -29,8 +34,8 @@ object TicTacToeGame {
   }
 
   def initGame() {
-    board = Array.fill[Player.Value](3, 3)(Player.EMPTY)
-    nextPlayer = Player.O
+    board = Array.fill[Player](3, 3)(Players.EMPTY)
+    nextPlayer = Players.O
   }
 
   def isGameWon : Boolean = {
@@ -45,11 +50,11 @@ object TicTacToeGame {
   }
 
   def isGameFinished : Boolean = {
-      board.forall(row => !row.contains(Player.EMPTY))
+      board.forall(row => !row.contains(Players.EMPTY))
   }
 
-  private def areEqualAndNotNull(array : Player.Value*): Boolean = {
-    if(array(0) == Player.EMPTY)
+  private def areEqualAndNotNull(array : Player*): Boolean = {
+    if(array(0) == Players.EMPTY)
       return false
     array.forall(x => x.equals(array(0)))
   }
@@ -62,17 +67,17 @@ object TicTacToeGame {
     val col = input(1).toInt
     if(row < 0 || col < 0 || row > 2 || col > 2)
       return false
-    if(board(row)(col) != Player.EMPTY)
+    if(board(row)(col) != Players.EMPTY)
       return false
     board(row)(col) = nextPlayer
     true
   }
 
   private def turnPlayer() = {
-    if (nextPlayer == Player.X)
-      nextPlayer = Player.O
+    if (nextPlayer == Players.X)
+      nextPlayer = Players.O
     else
-      nextPlayer = Player.X
+      nextPlayer = Players.X
   }
 
   def printBoard() {
@@ -94,10 +99,14 @@ object TicTacToeGame {
     println("No winners. Sorry!")
   }
 
-  object Player extends Enumeration {
-    val X = Value("X")
-    val O = Value("O")
-    val EMPTY = Value(" ")
+  object Players {
+    sealed abstract class Player(val name : String) {
+      override def toString: String = name
+    }
+
+    case object X extends Player("X")
+    case object O extends Player("O")
+    case object EMPTY extends Player(" ")
   }
 
 }
