@@ -2,6 +2,13 @@ import scala.io.Source
 
 /**
   * Created by Sijmen on 26-3-2017.
+  *
+  * Assignment:
+  *  • Use foldLeft to compute the total size of a list of strings.
+  *  • Write a Censor trait with a method that will replace the curse words
+  *    Shoot and Darn with Pucky and Beans alternatives. Use a map to
+  *    store the curse words and their alternatives.
+  *  • Load the curse words and alternatives from a ﬁle.
   */
 trait Censor {
 
@@ -27,6 +34,7 @@ class TextReader(words: Array[String]) extends Censor {
   def this(text: String) = this(text.split(' '))
 
   def wordCount(): Int = {
+    words.foldLeft(0)((sum, _) => sum +1)
     (0 /: words) {(sum, _) => sum + 1}
   }
   def censoredText() : String = {
