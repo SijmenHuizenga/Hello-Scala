@@ -75,13 +75,12 @@ object TrueRing {
 class ObjTester {
   def A() = 10 + 20
   def B() = {10 + 20}
-  def C(): Unit = {(10 + 20)}
+  def C(): Unit = {val c = 10 + 20}
 }
 
 trait Cool {
    def greet() {println("Hey Man!")}
 }
-class Character(override var first_name: String)
+class Character(first_name: String)
   extends SimplePerson(first_name, "test") with Cool{
 }
-new Character("")
