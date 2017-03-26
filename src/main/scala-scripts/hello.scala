@@ -1,6 +1,7 @@
 /**
  * Created by Sijmen on 24-3-2017.
  */
+
 val a = 2
 val b = 2
 
@@ -10,7 +11,7 @@ if (b < a) {
   println("false")
 }
 
-def whileLoop: Unit = {
+def whileLoop(): Unit = {
   var i = 1
   println( "While Loop" )
   while(i <= 10) {
@@ -18,7 +19,7 @@ def whileLoop: Unit = {
     i+=1
   }
 }
-whileLoop
+whileLoop()
 
 def forLoop(args: Range) {
   println( "for loop " )
@@ -32,7 +33,7 @@ def forNiceLoop(args: Range) {
     println(arg)
   }
 }
-var range05 = (0 until 5)
+val range05 = 0 until 5
 forNiceLoop(range05)
 
 def forCoolLoop(args: Range) {
