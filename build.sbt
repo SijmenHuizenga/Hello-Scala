@@ -2,7 +2,7 @@ name := "Hello-Scala"
 organization := "it.sijmen"
 version := "0.0.1"
 
-scalaVersion := Option(System.getProperty("scala.version")).getOrElse("2.11.4")
+scalaVersion := Option(System.getProperty("scala.version")).getOrElse("2.12.1")
 
 scalaSource in Compile := baseDirectory.value / "src/main/scala"
 
