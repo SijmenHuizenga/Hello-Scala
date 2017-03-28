@@ -14,26 +14,64 @@ import akka.util.Timeout
 import scala.concurrent.Future
 import scala.concurrent._
 import ExecutionContext.Implicits.global
+import scala.collection.immutable
 import scala.concurrent.duration.Duration
+import scala.xml.XML
 
 class PageScraper extends Actor {
+
+  var result : ScrapeUrlResult = _
+
   override def receive = {
-    case (url : Url) =>
+    case (_ : Url) if result != null =>
+      sender ! Status.Failure(new IllegalStateException("already called"))
+    case (req : ScrapeUrl) =>
       try{
-        val page = Source.fromURL(url.url).mkString
-        sender ! UrlLength(url, page.length)
+        val page = Source.fromURL(req.url.path).mkString
+        var urls : List[Url] = findUrls(page)
+
+        implicit val timeout = Timeout(20, TimeUnit.SECONDS)
+
+        val linkfutures: List[Future[ScrapeLinkResult]] = urls.map(link => (context.actorOf(Props[UrlSizeLoader]) ? link.path).mapTo[ScrapeLinkResult])
+
+        val linkResults: List[ScrapeLinkResult] = linkfutures.map(lf => Await.result(lf, timeout.duration))
+
+        result = ScrapeUrlResult(req.url, page.length, linkResults)
+
+        sender ! result
       }catch{
         case e: Exception => sender ! Status.Failure(e)
       }
     case x =>
       throw new IllegalArgumentException(s"Request $x not acceptable")
   }
+
+  def findUrls(page : String) : List[Url] = {
+      "href=\"([^\"]*)\"".r
+        .findAllIn(page)
+        .matchData.map(f => Url(f.group(1)).pretify)
+        .filter(p => p != null)
+        .toList
+        .distinct
+  }
 }
 
-class LinkFinder
+class UrlSizeLoader extends Actor {
+  override def receive = {
+    case url : String => sender ! ScrapeLinkResult(Url(url), Source.fromURL(url).mkString.length)
+  }
+}
 
-case class Url(url : String)
-case class UrlLength(url : Url, time : Integer)
+case class Url(path : String){
+  def pretify : Url = {
+    if(this.path == null || this.path == "#" || this.path.startsWith("/"))
+      return null
+    Url(path.split('?')(0))
+  }
+}
+case class ScrapeUrl(url : Url)
+case class ScrapeLinkResult(url: Url, pageSize : Integer)
+case class ScrapeUrlResult(url: Url, pageSize : Integer, links : List[ScrapeLinkResult])
 
 object SizerMain {
 
@@ -42,26 +80,33 @@ object SizerMain {
   def main(args: Array[String]): Unit = {
     runTest()
     system.terminate()
-    Await.ready(system.whenTerminated, Duration(10, TimeUnit.SECONDS))
+    Await.ready(system.whenTerminated, Duration(60, TimeUnit.SECONDS))
   }
 
   def runTest() {
     val urls : List[Url] = List(
       Url("https://sijmen.it"),
-      Url("https://facebook.com"),
-      Url("https://github.com"),
-      Url("https://twitter.com")
+      Url("http://example.com/"),
+      Url("http://webscraper.io/test-sites/e-commerce/allinone"),
+      Url("http://webscraper.io/test-sites/tables"),
+      Url("http://testing-ground.scraping.pro/invalid")
+//      Url("https://github.com"),
+//      Url("https://www.google.nl")
     )
 
-    implicit val timeout = Timeout(20, TimeUnit.SECONDS)
+    implicit val timeout = Timeout(60, TimeUnit.SECONDS)
 
     for(url <- urls){
       val actor = system.actorOf(Props[PageScraper])
-      val fut : Future[UrlLength] = (actor ? url).mapTo[UrlLength]
+      val fut : Future[ScrapeUrlResult] = (actor ? ScrapeUrl(url)).mapTo[ScrapeUrlResult]
 
       fut onComplete {
-        case Success(resp : UrlLength) =>
-          println(resp.url + " : " + resp.time)
+        case Success(resp : ScrapeUrlResult) =>
+          println(resp.url + " : " + resp.pageSize + "\n" +
+            ("" /: resp.links){
+              (total, link) => total + "\t: " + link.url + " : " + link.pageSize + "\n"
+            }
+          )
         case Failure(t : Throwable) =>
           System.err.println("failed to load " + url + " : " + t.getMessage)
       }
