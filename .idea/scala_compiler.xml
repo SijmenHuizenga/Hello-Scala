@@ -8,6 +8,8 @@
     <option name="higherKinds" value="true" />
     <option name="existentials" value="true" />
     <option name="macros" value="true" />
-    <profile name="SBT 1" modules="hello-scala" />
+    <profile name="SBT 1" modules="hello-scala">
+      <option name="postfixOps" value="true" />
+    </profile>
   </component>
 </project>

@@ -2,7 +2,7 @@ name := "Hello-Scala"
 organization := "it.sijmen"
 version := "0.0.1"
 
-scalaVersion := Option(System.getProperty("scala.version")).getOrElse("2.12.1")
+scalaVersion := "2.12.1"
 
 scalaSource in Compile := baseDirectory.value / "src/main/scala"
 
@@ -13,3 +13,7 @@ initialize := {
   if (sys.props("java.specification.version") != "1.8")
     sys.error("Java 8 is required for this project.")
 }
+
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+libraryDependencies += "com.typesafe.akka" % "akka-actor_2.12" % "2.4.17"
